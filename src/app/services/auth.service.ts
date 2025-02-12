@@ -17,7 +17,6 @@ export class AuthService {
       }
     });
   }
-
   
 
   async isAuthenticated(): Promise<boolean> {
@@ -30,14 +29,26 @@ export class AuthService {
 
   async getToken(): Promise<string | null> {
     try {
-      const token = await firstValueFrom(this.auth0.getAccessTokenSilently());
-      console.log('Token:', token);
+      const token = await firstValueFrom(this.auth0.getAccessTokenSilently());     
+  
+   
+      const payload = JSON.parse(atob(token.split('.')[1])); 
+      console.log('Payload del Token:', payload);
+  
+      const roles = payload['https://roles0auth.com/roles'];
+      if (roles) {
+        console.log('Roles en el token:', roles);
+      } else {
+        console.warn('⚠️ Los roles NO están en el token. Revisa la configuración en Auth0.');
+      }
+  
       return token;
     } catch (error) {
       console.error('Error al obtener el token', error);
       return null;
     }
   }
+  
 
   login() {
     this.auth0.loginWithRedirect();
