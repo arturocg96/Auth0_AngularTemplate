@@ -1,0 +1,22 @@
+
+<div class="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">Perfil de Usuario</h1>
+  
+    @if (user) {
+      <div class="flex flex-col md:flex-row items-center gap-6 p-5 bg-gray-100 rounded-lg shadow-md">
+        <img [src]="user.picture" class="rounded-full w-24 h-24 border border-gray-400 shadow-sm" />
+        <div class="text-center md:text-left">
+          <h2 class="text-xl font-semibold text-gray-800">{{ user.name }}</h2>
+          <p class="text-gray-600 text-sm">{{ user.email }}</p>
+        </div>
+      </div>
+  
+      <div class="mt-6 bg-gray-900 text-white p-4 rounded-lg shadow-md overflow-auto">
+        <h2 class="text-lg font-semibold mb-3">Datos JSON</h2>
+        <pre class="text-sm whitespace-pre-wrap">{{ profileJson }}</pre>
+      </div>
+    } @else {
+      <p class="text-center text-gray-500">Cargando perfil...</p>
+    }
+  </div>
+  
