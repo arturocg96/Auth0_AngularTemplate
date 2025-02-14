@@ -11,10 +11,10 @@ export class ApiService {
   private baseUrl = environment.auth0.apiUrl;
 
   testPublicEndpoint() {
-    return this.http.get(`${this.baseUrl}/public`);
+    return this.http.get(`${this.baseUrl}/api/public`);
   }
 
   testPrivateEndpoint() {
-    return this.http.get(`${this.baseUrl}/private`);
+    return this.http.get(`${this.baseUrl}/api/private/admin-only`);
   }
 }

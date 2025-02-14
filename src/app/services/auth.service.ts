@@ -1,27 +1,31 @@
-// src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { Permissions } from '../core/auth/models/permissions.model';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private userPermissions: string[] = [];
+  private token: string | null = null;
+  private userPermissions$ = new BehaviorSubject<string[]>([]);
+  private userRoles$ = new BehaviorSubject<string[]>([]);
 
   constructor(
     private auth0: Auth0Service,
     private router: Router
   ) {
-    this.isAuthenticated().then(isAuth => {
-      if (isAuth) {
-        this.getToken().then(() => {
-          this.loadUserPermissions();
-        });
-      }
-    });
+    this.initializeAuth();
+  }
+
+  private async initializeAuth() {
+    const isAuth = await this.isAuthenticated();
+    if (isAuth) {
+      console.log("🔹 Usuario autenticado, cargando permisos y roles...");
+      await this.loadUserPermissionsAndRoles();
+    } else {
+      console.warn("⚠️ Usuario no autenticado, no se cargan permisos ni roles.");
+    }
   }
 
   async isAuthenticated(): Promise<boolean> {
@@ -33,76 +37,72 @@ export class AuthService {
   }
 
   async getToken(): Promise<string | null> {
-    try {
-      const token = await firstValueFrom(this.auth0.getAccessTokenSilently());     
-  
-      const payload = JSON.parse(atob(token.split('.')[1])); 
-      console.log('Payload del Token:', payload);
-  
-      const permissions = payload['permissions'] || [];
-      if (permissions.length > 0) {
-        console.log('Permisos en el token:', permissions);
-        this.userPermissions = permissions;
-      } else {
-        console.warn('⚠️ Los permisos NO están en el token. Revisa la configuración en Auth0.');
-      }
+    if (this.token) return this.token; // Evita pedirlo de nuevo si ya está guardado
 
-      const roles = payload['https://roles0auth.com/roles'];
-      if (roles) {
-        console.log('Roles en el token:', roles);
-      } else {
-        console.warn('⚠️ Los roles NO están en el token. Revisa la configuración en Auth0.');
-      }
-  
-      return token;
+    try {
+      this.token = await firstValueFrom(this.auth0.getAccessTokenSilently());
+      console.log('🔑 Token obtenido:', this.token); 
+      this.extractPermissionsAndRolesFromToken(this.token);
+      return this.token;
     } catch (error) {
       console.error('Error al obtener el token', error);
       return null;
     }
   }
 
-  private async loadUserPermissions() {
-    const token = await this.getToken();
-    if (token) {
+  private extractPermissionsAndRolesFromToken(token: string) {
+    try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      this.userPermissions = payload['permissions'] || [];
+
+      const permissions = payload['permissions'] || [];
+      const roles = payload['https://roles0auth.com/roles'] || [];
+
+      this.userPermissions$.next(permissions);
+      this.userRoles$.next(roles);
+
+      console.log('✅ Permisos en el token:', permissions);
+      console.log('✅ Roles en el token:', roles);
+    } catch (error) {
+      console.error('Error al decodificar el token:', error);
     }
   }
 
-  hasPermission(permission: keyof typeof Permissions): boolean {
-    return this.userPermissions.includes(Permissions[permission]);
+  async loadUserPermissionsAndRoles() {
+    if (!this.token) {
+      await this.getToken();
+    }
   }
 
-  hasAnyPermission(permissions: (keyof typeof Permissions)[]): boolean {
+  getPermissions(): string[] {
+    return this.userPermissions$.value;
+  }
+
+  getRoles(): string[] {
+    return this.userRoles$.value;
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.getPermissions().includes(permission);
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
     return permissions.some(permission => this.hasPermission(permission));
   }
 
-  hasAllPermissions(permissions: (keyof typeof Permissions)[]): boolean {
+  hasAllPermissions(permissions: string[]): boolean {
     return permissions.every(permission => this.hasPermission(permission));
   }
 
-  isRoot(): boolean {
-    return this.hasAllPermissions([
-      'ReadAnyUser',
-      'WriteAnyUser',
-      'DeleteAnyUser',
-      'ManageRoles',
-      'ManageSettings',
-      'AccessAdminPanel',
-      'ManageOrganizations',
-      'ViewMetrics',
-      'ManageApiKeys'
-    ]);
+  hasRole(role: string): boolean {
+    return this.getRoles().includes(role);
   }
 
-  isAdmin(): boolean {
-    return this.hasAllPermissions([
-      'ReadAssignedUsers',
-      'WriteAssignedUsers',
-      'AccessAdminPanel',
-      'ViewMetrics',
-      'ManageContent'
-    ]);
+  hasAnyRole(roles: string[]): boolean {
+    return roles.some(role => this.hasRole(role));
+  }
+
+  hasAllRoles(roles: string[]): boolean {
+    return roles.every(role => this.hasRole(role));
   }
 
   login() {
