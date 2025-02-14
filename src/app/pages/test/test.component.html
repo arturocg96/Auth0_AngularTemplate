@@ -1,0 +1,60 @@
+<div class="container mx-auto p-4">
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-bold mb-4">Test de Conexión</h2>
+      
+      <!-- Estado de Autenticación -->
+      <div class="mb-6 p-4 bg-gray-50 rounded">
+        <h3 class="text-lg font-semibold mb-2">Estado de Autenticación</h3>
+        <p class="mb-2">Autenticado: {{ isAuthenticated ? 'Sí' : 'No' }}</p>
+        @if (!isAuthenticated) {
+          <button 
+            (click)="auth.login()"
+            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Login
+          </button>
+        } @else {
+          <button 
+            (click)="auth.logout()"
+            class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            Logout
+          </button>
+        }
+      </div>
+  
+      <!-- Test Endpoints -->
+      <div class="space-y-6">
+        <!-- Endpoint Público -->
+        <div class="p-4 bg-gray-50 rounded">
+          <h3 class="text-lg font-semibold mb-2">Endpoint Público</h3>
+          <button 
+            (click)="testPublic()"
+            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2">
+            Probar Endpoint Público
+          </button>
+          @if (publicResult) {
+            <pre class="bg-gray-100 p-4 rounded mt-2">{{ publicResult | json }}</pre>
+          }
+        </div>
+  
+        <!-- Endpoint Privado -->
+        <div class="p-4 bg-gray-50 rounded">
+          <h3 class="text-lg font-semibold mb-2">Endpoint Privado</h3>
+          <button 
+            (click)="testPrivate()"
+            class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 mb-2">
+            Probar Endpoint Privado
+          </button>
+          @if (privateResult) {
+            <pre class="bg-gray-100 p-4 rounded mt-2">{{ privateResult | json }}</pre>
+          }
+        </div>
+      </div>
+  
+      <!-- Error Messages -->
+      @if (error) {
+        <div class="mt-4 p-4 bg-red-100 text-red-700 rounded">
+          {{ error }}
+        </div>
+      }
+    </div>
+  </div>
