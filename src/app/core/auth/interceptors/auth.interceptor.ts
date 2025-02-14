@@ -7,7 +7,6 @@ import { from, throwError } from 'rxjs';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const auth = inject(AuthService);
   
-    // Convertir la Promise a Observable usando from
     return from(auth.getToken()).pipe(
       switchMap(token => {
         if (token) {

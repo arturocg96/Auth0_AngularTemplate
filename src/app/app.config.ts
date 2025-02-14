@@ -24,8 +24,8 @@ export const appConfig: ApplicationConfig = {
         audience: environment.auth0.audience,
         scope: 'openid profile email read:roles'
       },
-      useRefreshTokens: true, // Habilita la rotación de tokens de actualización
-      cacheLocation: 'localstorage', // Almacena el token en localStorage
+      useRefreshTokens: true, 
+      cacheLocation: 'localstorage', 
     })
   ]
 };
